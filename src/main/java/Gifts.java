@@ -1,11 +1,10 @@
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class Gifts {
-    static Map<String, Node> allNodes = new HashMap<>();
-    static Set<String> visited = new HashSet<>();
-    static List<String> cycleEdges = new ArrayList<>();
-    static List<String> finalAssignments = new ArrayList<>();
+    private static Map<String, Node> allNodes = new HashMap<>();
+    private static Set<String> visited = new HashSet<>();
+    private static List<String> cycleEdges = new ArrayList<>();
+    private static List<String> finalAssignments = new ArrayList<>();
 
     static class Node{
         String id;
@@ -57,14 +56,14 @@ public class Gifts {
     public static void main(String[] args) {
 //        addPerson("1","2,4");
         addPerson("1","2,4,5,6,7");
-        addPerson("2","3,4");
+        addPerson("2","3,4,7");
         addPerson("3","4");
         addPerson("4","5");
         System.out.println(allNodes.values());
+
         //remove all cycles first
         for(String person : allNodes.keySet()){
             boolean cycle = findCycles(person, "");
-            System.out.println(cycle);
             if(cycle){
                 finalAssignments.add(cycleEdges.toString());
                 cycleEdges.forEach(edge -> {
@@ -81,35 +80,36 @@ public class Gifts {
         System.out.println(finalAssignments);
         System.out.println("Any cycles present have been removed");
         System.out.println(allNodes.values());
-        //gonna get greedy now
+
+        //gonna get greedy now and assign
         Queue<Node> bfsQueue = new LinkedList<>();
         List<Node> remainingNodes = new ArrayList<>(allNodes.values());
-        bfsQueue.offer(remainingNodes.get(0));
-        System.out.println("bfsQueue = " + bfsQueue);
+        bfsQueue.add(remainingNodes.get(0));
+
         while(!bfsQueue.isEmpty()){
-            System.out.println("entered");
-            Node person = bfsQueue.poll();
+            Node person = bfsQueue.remove();
             List<Node> friends = person.getFriends();
             List<String> assignments = new ArrayList<>();
             for (Node friend : friends) {
                 if (person.getGifts() == 0 || person.getGifts() == -1) {
-                    assignments.add(person + "->" + friend.getId());
+                    assignments.add(person.getId() + "->" + friend.getId());
                     person.setGifts(1);
                     friend.setGifts(-1);
+                    friend.getFriends().remove(person);
                 } else if (person.getGifts() == 1) {
-                    assignments.add(friend.getId() + "->" + person);
+                    assignments.add(friend.getId() + "->" + person.getId());
                     person.setGifts(-1);
                     friend.setGifts(1);
+                    friend.getFriends().remove(person);
                 }
-                bfsQueue.offer(friend);
+                bfsQueue.add(friend);
             }
             finalAssignments.add(assignments.toString());
-        };
+        }
         System.out.println(finalAssignments);
         System.out.println(remainingNodes);
 
-//        Boolean assignmentPossible = assign();
-
+        //voila!
     }
 
     private static void removeEdge(String friend1, String friend2) {
